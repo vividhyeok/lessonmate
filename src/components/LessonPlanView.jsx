@@ -75,7 +75,9 @@ const LessonPlanView = ({
                       {t.items && t.items.length > 0 ? t.items.map((item, idx) => (
                         <div key={idx} className="flex flex-col w-full">
                            <div className="flex items-start gap-1 w-full">
-                              <span className="shrink-0 font-bold">□</span>
+                              <span className="shrink-0 font-bold">
+                                {item.type === 'ppt' ? '□' : item.type === 'video' ? '□' : '□'}
+                              </span>
                               <span className="break-words whitespace-pre-wrap font-bold">
                                 {item.type === 'ppt' ? '(PPT) ' : item.type === 'video' ? '(Video) ' : '(URL) '}
                                 {item.title}

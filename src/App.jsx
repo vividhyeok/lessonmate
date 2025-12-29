@@ -100,7 +100,8 @@ const App = () => {
         if (rows.length === 0) return;
 
         const newTracks = rows.map((row, index) => {
-          // row: [stage, activityType, teacher, student, time, materials]
+          // row: [Stage, Activity, Teacher, Student, Time, PPT Title, PPT Note, URL Title, URL Note, Video Title, Video Note]
+          
           // Map stage
           let stage = 'dev';
           if (row[0] && row[0].includes('도입')) stage = 'intro';
@@ -108,52 +109,40 @@ const App = () => {
 
           // Parse items
           const items = [];
-          const materials = row[5] || '';
           
-          // Split by □ and ◆
-          const parts = materials.split(/([□◆])/).filter(p => p.trim() !== '');
-          
-          let currentItem = null;
+          // 1. PPT (Col 5, 6)
+          if (row[5] && row[5].trim()) {
+             items.push({
+                id: Date.now() + index * 100 + 1,
+                type: 'ppt',
+                title: row[5],
+                content: '',
+                note: row[6] || ''
+             });
+          }
 
-          for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            if (part === '□') {
-              if (i + 1 < parts.length) {
-                const content = parts[i+1].trim();
-                let type = 'ppt';
-                if (content.toLowerCase().includes('video') || content.includes('영상')) type = 'video';
-                else if (content.toLowerCase().includes('url') || content.toLowerCase().includes('http') || content.includes('form') || content.includes('mentimeter')) type = 'url';
-                
-                currentItem = {
-                  id: Date.now() + index * 100 + items.length,
-                  type: type,
-                  title: content,
-                  content: '',
-                  note: ''
-                };
-                items.push(currentItem);
-                i++;
-              }
-            } else if (part === '◆') {
-              if (i + 1 < parts.length) {
-                const content = parts[i+1].trim();
-                if (currentItem) {
-                  currentItem.note = content;
-                } else {
-                  // If note appears before any item, create a dummy item or attach to a general note item?
-                  // For now, let's create a general PPT item
-                  currentItem = {
-                    id: Date.now() + index * 100 + items.length,
-                    type: 'ppt',
-                    title: 'General Note',
-                    content: '',
-                    note: content
-                  };
-                  items.push(currentItem);
-                }
-                i++;
-              }
-            }
+          // 2. URL (Col 7, 8)
+          if (row[7] && row[7].trim()) {
+             items.push({
+                id: Date.now() + index * 100 + 2,
+                type: 'url',
+                title: row[7],
+                url: row[7], // Use title as initial URL
+                content: '',
+                note: row[8] || ''
+             });
+          }
+          
+          // 3. Video (Col 9, 10)
+          if (row[9] && row[9].trim()) {
+             items.push({
+                id: Date.now() + index * 100 + 3,
+                type: 'video',
+                title: row[9],
+                url: row[9], // Use title as initial URL/Search term
+                content: '',
+                note: row[10] || ''
+             });
           }
 
           return {
