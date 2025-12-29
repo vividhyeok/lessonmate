@@ -87,7 +87,7 @@ const TrackColumn = ({
       </div>
 
       {/* Materials Row (Dynamic List) */}
-      <div className="flex-1 border-b border-slate-700 p-2 flex flex-col gap-2 min-h-[200px] overflow-y-auto custom-scrollbar bg-[#1a1a1a]">
+      <div className="flex-1 border-b border-slate-700 p-2 flex flex-col gap-2 min-h-[200px] bg-[#1a1a1a]">
         {track.items.map((item, i) => (
           <div 
             key={item.id}

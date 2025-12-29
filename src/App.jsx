@@ -130,57 +130,88 @@ const App = () => {
 
   const processRows = (rows) => {
       return rows.map((row, index) => {
-          // row: [Stage, Activity, Teacher, Student, Time, PPT Title, PPT Note, URL Title, URL Note, Video Title, Video Note]
+          // row: [Stage, Activity, Teacher, Student, Time, Material(Combined) OR PPT Title, PPT Note, ...]
           
-          // Map stage
           let stage = 'dev';
           if (row[0] && row[0].includes('도입')) stage = 'intro';
           else if (row[0] && row[0].includes('정리')) stage = 'wrap';
 
+          const cleanText = (text) => text ? text.replace(/<br>/gi, '\n').trim() : '';
+
+          const teacherText = cleanText(row[2]);
+          const studentText = cleanText(row[3]);
+          const activity = cleanText(row[1]);
+
           // Parse items
           const items = [];
           
-          // 1. PPT (Col 5, 6)
-          if (row[5] && row[5].trim()) {
-             items.push({
-                id: Date.now() + index * 100 + 1,
-                type: 'ppt',
-                title: row[5],
-                content: '',
-                note: row[6] || ''
-             });
-          }
+          // Check for new format (Combined Material Column at index 5)
+          // If row length is small (<= 7) and row[5] exists, assume new format
+          if (row.length <= 7 && row[5]) {
+              // New format parsing
+              const materialText = row[5].replace(/<br>/gi, '\n');
+              // Split by □
+              const parts = materialText.split('□');
+              // parts[0] is usually empty or garbage before first box
+              for (let i = 1; i < parts.length; i++) {
+                  const part = parts[i];
+                  // Split by ◆ for notes
+                  const subParts = part.split('◆');
+                  const title = subParts[0].trim();
+                  const note = subParts.slice(1).join('\n').trim();
+                  
+                  items.push({
+                      id: Date.now() + index * 100 + i,
+                      type: 'ppt', // Default to ppt so it shows up in the view
+                      title: title,
+                      content: '',
+                      note: note
+                  });
+              }
+          } else {
+              // Old format parsing (fallback)
+              // 1. PPT (Col 5, 6)
+              if (row[5] && row[5].trim()) {
+                 items.push({
+                    id: Date.now() + index * 100 + 1,
+                    type: 'ppt',
+                    title: row[5],
+                    content: '',
+                    note: row[6] || ''
+                 });
+              }
 
-          // 2. URL (Col 7, 8)
-          if (row[7] && row[7].trim()) {
-             items.push({
-                id: Date.now() + index * 100 + 2,
-                type: 'url',
-                title: row[7],
-                url: row[7], // Use title as initial URL
-                content: '',
-                note: row[8] || ''
-             });
-          }
-          
-          // 3. Video (Col 9, 10)
-          if (row[9] && row[9].trim()) {
-             items.push({
-                id: Date.now() + index * 100 + 3,
-                type: 'video',
-                title: row[9],
-                url: row[9], // Use title as initial URL/Search term
-                content: '',
-                note: row[10] || ''
-             });
+              // 2. URL (Col 7, 8)
+              if (row[7] && row[7].trim()) {
+                 items.push({
+                    id: Date.now() + index * 100 + 2,
+                    type: 'url',
+                    title: row[7],
+                    url: row[7], // Use title as initial URL
+                    content: '',
+                    note: row[8] || ''
+                 });
+              }
+              
+              // 3. Video (Col 9, 10)
+              if (row[9] && row[9].trim()) {
+                 items.push({
+                    id: Date.now() + index * 100 + 3,
+                    type: 'video',
+                    title: row[9],
+                    url: row[9], // Use title as initial URL/Search term
+                    content: '',
+                    note: row[10] || ''
+                 });
+              }
           }
 
           return {
             id: Date.now() + index,
             stage: stage,
             time: parseInt(row[4]) || 0,
-            teacher: `[${row[1]}]\n${row[2]}`,
-            student: row[3],
+            teacher: `[${activity}]\n${teacherText}`,
+            student: studentText,
             items: items
           };
         });
