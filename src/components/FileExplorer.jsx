@@ -1,0 +1,75 @@
+import React, { useState } from 'react';
+import { Folder, File, Plus, Trash2, Save } from 'lucide-react';
+
+const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDeleteFile, onSaveCurrent }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  return (
+    <div className="w-64 bg-[#252526] border-r border-slate-700 flex flex-col h-full shrink-0">
+      {/* Header */}
+      <div className="h-8 px-4 flex items-center justify-between bg-[#333333] text-slate-300 text-xs font-bold uppercase tracking-wider">
+        <span>Explorer</span>
+        <div className="flex gap-1">
+          <button onClick={() => onCreateFile()} className="p-1 hover:bg-slate-600 rounded" title="New File">
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* File List */}
+      <div className="flex-1 overflow-y-auto p-2">
+        <div className="mb-2">
+          <div 
+            className="flex items-center gap-1 text-slate-400 text-xs font-bold px-2 py-1 cursor-pointer hover:text-slate-200"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <Folder size={14} className={isExpanded ? 'text-indigo-400' : 'text-slate-500'} />
+            <span>MY LESSONS</span>
+          </div>
+          
+          {isExpanded && (
+            <div className="mt-1 ml-2 flex flex-col gap-0.5">
+              {files.map(file => (
+                <div 
+                  key={file.id}
+                  className={`group flex items-center justify-between px-2 py-1.5 rounded cursor-pointer text-xs ${
+                    currentFileId === file.id 
+                      ? 'bg-[#37373d] text-white' 
+                      : 'text-slate-400 hover:bg-[#2a2d2e] hover:text-slate-200'
+                  }`}
+                  onClick={() => onSelectFile(file)}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <File size={14} className="text-blue-400 shrink-0" />
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onDeleteFile(file.id); }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-rose-900/50 text-rose-400 rounded"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+              {files.length === 0 && (
+                <div className="px-4 py-2 text-slate-600 italic text-xs">No files found</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="p-2 border-t border-slate-700">
+        <button 
+          onClick={onSaveCurrent}
+          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded text-xs font-bold transition"
+        >
+          <Save size={14} /> Save Current
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default FileExplorer;

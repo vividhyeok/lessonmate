@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+
+@layer utilities {
+  .font-batang {
+    font-family: 'Batang', 'BatangChe', 'Gungsuh', 'GungsuhChe', serif;
+  }
+}
