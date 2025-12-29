@@ -15,6 +15,7 @@ const App = () => {
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Layout State
   const [topHeight, setTopHeight] = useState(50); // Percentage
@@ -169,35 +170,48 @@ const App = () => {
   };
 
   const parseCSV = (text) => {
-    const lines = text.split('\n');
     const result = [];
-    // Skip header
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+    let row = [];
+    let inQuotes = false;
+    let current = '';
+    
+    // Normalize line endings
+    const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
+    // Skip header (find first newline)
+    let startIdx = normalizedText.indexOf('\n') + 1;
+    if (startIdx === 0) return []; // Empty or single line
+
+    for (let i = startIdx; i < normalizedText.length; i++) {
+      const char = normalizedText[i];
       
-      const row = [];
-      let inQuotes = false;
-      let current = '';
-      
-      for (let j = 0; j < line.length; j++) {
-        const char = line[j];
-        if (char === '"') {
-          if (j + 1 < line.length && line[j+1] === '"') {
-            current += '"';
-            j++;
-          } else {
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          row.push(current);
-          current = '';
+      if (char === '"') {
+        if (i + 1 < normalizedText.length && normalizedText[i+1] === '"') {
+          current += '"';
+          i++;
         } else {
-          current += char;
+          inQuotes = !inQuotes;
         }
+      } else if (char === ',' && !inQuotes) {
+        row.push(current);
+        current = '';
+      } else if (char === '\n' && !inQuotes) {
+        row.push(current);
+        if (row.some(cell => cell.trim() !== '')) {
+            result.push(row);
+        }
+        row = [];
+        current = '';
+      } else {
+        current += char;
       }
+    }
+    // Push last row if exists
+    if (current || row.length > 0) {
       row.push(current);
-      result.push(row);
+      if (row.some(cell => cell.trim() !== '')) {
+        result.push(row);
+      }
     }
     return result;
   };
@@ -246,8 +260,16 @@ const App = () => {
 
   const handleResizeHorizontal = (e) => {
     if (!isResizingHorizontal.current || !containerRef.current) return;
-    const containerWidth = containerRef.current.clientWidth;
-    const newWidth = (e.clientX / containerWidth) * 100;
+    e.preventDefault(); // Prevent selection
+    const containerRect = containerRef.current.getBoundingClientRect();
+    // Calculate relative to the container, not viewport
+    const relativeX = e.clientX - containerRect.left;
+    // Adjust for sidebar width if it's open
+    const sidebarWidth = isSidebarOpen ? 256 : 0; // 64 * 4 = 256px (w-64)
+    const availableWidth = containerRect.width - sidebarWidth;
+    const adjustedX = relativeX - sidebarWidth;
+    
+    const newWidth = (adjustedX / availableWidth) * 100;
     if (newWidth > 10 && newWidth < 90) setLeftWidth(newWidth);
   };
 
@@ -443,15 +465,25 @@ const App = () => {
     <div ref={containerRef} className="flex h-screen bg-slate-900 text-slate-300 font-sans overflow-hidden select-none">
       
       {/* Sidebar: File Explorer */}
-      <FileExplorer 
-        files={files}
-        currentFileId={currentFile?.id}
-        onSelectFile={loadLesson}
-        onCreateFile={handleCreateFile}
-        onDeleteFile={handleDeleteFile}
-        onSaveCurrent={handleSaveCurrent}
-        onImportFile={handleImportFile}
-      />
+      {isSidebarOpen && (
+        <FileExplorer 
+          files={files}
+          currentFileId={currentFile?.id}
+          onSelectFile={loadLesson}
+          onCreateFile={handleCreateFile}
+          onDeleteFile={handleDeleteFile}
+          onSaveCurrent={handleSaveCurrent}
+          onImportFile={handleImportFile}
+          onToggleSidebar={() => setIsSidebarOpen(false)}
+        />
+      )}
+      {!isSidebarOpen && (
+        <div className="w-8 bg-[#333333] border-r border-slate-700 flex flex-col items-center py-2">
+           <button onClick={() => setIsSidebarOpen(true)} className="p-1 hover:bg-slate-600 rounded text-slate-400">
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="9" x2="9" y1="3" y2="21"/></svg>
+           </button>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full min-w-0">

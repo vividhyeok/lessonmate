@@ -71,11 +71,16 @@ const LessonPlanView = ({
                     />
                   </td>
                   <td className="border border-black p-2 text-center align-middle text-xs text-slate-500">
-                    <div className="flex flex-col gap-1 items-center">
+                    <div className="flex flex-col gap-1 items-start text-left w-full">
                       {t.items && t.items.length > 0 ? t.items.map((item, idx) => (
-                        <span key={idx} className="px-1 rounded bg-slate-100 border border-slate-300 text-[10px]">
-                          {item.type === 'ppt' ? 'PPT' : item.type === 'url' ? 'URL' : 'Video'}
-                        </span>
+                        <div key={idx} className="flex items-start gap-1 w-full">
+                           <span className="shrink-0 font-bold">
+                            {item.title === '유의점' ? '◆' : '□'}
+                           </span>
+                           <span className="break-words whitespace-pre-wrap">
+                             {item.title === '유의점' ? item.content : item.title}
+                           </span>
+                        </div>
                       )) : '-'}
                     </div>
                   </td>

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Folder, File, Plus, Trash2, Save, Upload } from 'lucide-react';
 
-const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDeleteFile, onSaveCurrent, onImportFile }) => {
+const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDeleteFile, onSaveCurrent, onImportFile, onToggleSidebar }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const fileInputRef = useRef(null);
 
@@ -17,7 +17,10 @@ const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDele
     <div className="w-64 bg-[#252526] border-r border-slate-700 flex flex-col h-full shrink-0">
       {/* Header */}
       <div className="h-8 px-4 flex items-center justify-between bg-[#333333] text-slate-300 text-xs font-bold uppercase tracking-wider">
-        <span>Explorer</span>
+        <div className="flex items-center gap-2">
+            <button onClick={onToggleSidebar} className="hover:text-white"><Folder size={14}/></button>
+            <span>Explorer</span>
+        </div>
         <div className="flex gap-1">
           <button onClick={() => fileInputRef.current.click()} className="p-1 hover:bg-slate-600 rounded" title="Import CSV">
             <Upload size={14} />
