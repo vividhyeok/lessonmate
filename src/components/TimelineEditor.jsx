@@ -58,6 +58,7 @@ const TimelineEditor = ({
             <div className="h-10 border-b border-slate-700 flex items-center px-3 text-xs font-bold text-slate-400 shrink-0">Time (min)</div>
             <div className="h-32 border-b border-slate-700 flex items-center px-3 text-xs font-bold text-slate-400 shrink-0">Teacher</div>
             <div className="h-32 border-b border-slate-700 flex items-center px-3 text-xs font-bold text-slate-400 shrink-0">Student</div>
+            <div className="h-32 border-b border-slate-700 flex items-center px-3 text-xs font-bold text-slate-400 shrink-0">PPT Content</div>
             <div className="flex-1 border-b border-slate-700 flex items-start pt-3 px-3 text-xs font-bold text-slate-400 min-h-[200px]">Materials</div>
             <div className="h-8 border-b border-slate-700 flex items-center px-3 text-xs font-bold text-slate-400 shrink-0">Actions</div>
           </div>
