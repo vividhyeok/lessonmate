@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import { Folder, File, Plus, Trash2, Save } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Folder, File, Plus, Trash2, Save, Upload } from 'lucide-react';
 
-const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDeleteFile, onSaveCurrent }) => {
+const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDeleteFile, onSaveCurrent, onImportFile }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      onImportFile(file);
+    }
+    e.target.value = null; // Reset
+  };
 
   return (
     <div className="w-64 bg-[#252526] border-r border-slate-700 flex flex-col h-full shrink-0">
@@ -10,6 +19,16 @@ const FileExplorer = ({ files, currentFileId, onSelectFile, onCreateFile, onDele
       <div className="h-8 px-4 flex items-center justify-between bg-[#333333] text-slate-300 text-xs font-bold uppercase tracking-wider">
         <span>Explorer</span>
         <div className="flex gap-1">
+          <button onClick={() => fileInputRef.current.click()} className="p-1 hover:bg-slate-600 rounded" title="Import CSV">
+            <Upload size={14} />
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".csv" 
+            className="hidden" 
+          />
           <button onClick={() => onCreateFile()} className="p-1 hover:bg-slate-600 rounded" title="New File">
             <Plus size={14} />
           </button>

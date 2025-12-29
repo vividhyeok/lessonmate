@@ -90,6 +90,118 @@ const App = () => {
     }
   };
 
+  const handleImportFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      try {
+        const rows = parseCSV(text);
+        if (rows.length === 0) return;
+
+        const newTracks = rows.map((row, index) => {
+          // row: [stage, activityType, teacher, student, time, materials]
+          // Map stage
+          let stage = 'dev';
+          if (row[0] && row[0].includes('도입')) stage = 'intro';
+          else if (row[0] && row[0].includes('정리')) stage = 'wrap';
+
+          // Parse items
+          const items = [];
+          const materials = row[5] || '';
+          
+          // Split by □ and ◆
+          const parts = materials.split(/([□◆])/).filter(p => p.trim() !== '');
+          
+          for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (part === '□') {
+              if (i + 1 < parts.length) {
+                const content = parts[i+1].trim();
+                let type = 'ppt';
+                if (content.toLowerCase().includes('video') || content.includes('영상')) type = 'video';
+                else if (content.toLowerCase().includes('url') || content.toLowerCase().includes('http') || content.includes('form')) type = 'url';
+                
+                items.push({
+                  id: Date.now() + index * 100 + items.length,
+                  type: type,
+                  title: content,
+                  content: '' 
+                });
+                i++;
+              }
+            } else if (part === '◆') {
+              if (i + 1 < parts.length) {
+                const content = parts[i+1].trim();
+                items.push({
+                  id: Date.now() + index * 100 + items.length,
+                  type: 'ppt', 
+                  title: '유의점',
+                  content: content
+                });
+                i++;
+              }
+            }
+          }
+
+          return {
+            id: Date.now() + index,
+            stage: stage,
+            time: parseInt(row[4]) || 0,
+            teacher: `[${row[1]}]\n${row[2]}`,
+            student: row[3],
+            items: items
+          };
+        });
+
+        const newFile = createFile(file.name.replace('.csv', ''));
+        newFile.tracks = newTracks;
+        saveFile(newFile);
+        setFiles(getFiles());
+        loadLesson(newFile);
+        alert('Imported successfully!');
+
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse CSV');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const parseCSV = (text) => {
+    const lines = text.split('\n');
+    const result = [];
+    // Skip header
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      const row = [];
+      let inQuotes = false;
+      let current = '';
+      
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"') {
+          if (j + 1 < line.length && line[j+1] === '"') {
+            current += '"';
+            j++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          row.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      row.push(current);
+      result.push(row);
+    }
+    return result;
+  };
+
   const handleSaveCurrent = () => {
     if (!currentFile) return;
     const updatedFile = { ...currentFile, tracks };
@@ -338,6 +450,7 @@ const App = () => {
         onCreateFile={handleCreateFile}
         onDeleteFile={handleDeleteFile}
         onSaveCurrent={handleSaveCurrent}
+        onImportFile={handleImportFile}
       />
 
       {/* Main Content Area */}
