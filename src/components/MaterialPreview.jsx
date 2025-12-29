@@ -32,39 +32,52 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId }) => {
             </div>
 
             {/* Body */}
-            <div className="flex-1 p-8 pt-6 overflow-auto">
-              {selectedItem.type === 'ppt' && (
-                <textarea 
-                  value={selectedItem.content}
-                  onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'content', e.target.value)}
-                  placeholder="Slide Content (Bullets)..."
-                  className="w-full h-full text-xl font-medium text-slate-600 placeholder-slate-200 outline-none bg-transparent resize-none leading-relaxed"
-                />
-              )}
-              {(selectedItem.type === 'url' || selectedItem.type === 'video') && (
-                <div className="flex flex-col gap-4 h-full">
-                  <input 
-                    type="text" 
-                    value={selectedItem.url}
-                    onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'url', e.target.value)}
-                    placeholder="https://..."
-                    className="w-full text-lg text-blue-600 underline placeholder-slate-300 outline-none bg-slate-50 p-2 rounded"
+            <div className="flex-1 p-8 pt-6 overflow-auto flex flex-col gap-4">
+              <div className="flex-1">
+                {selectedItem.type === 'ppt' && (
+                  <textarea 
+                    value={selectedItem.content}
+                    onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'content', e.target.value)}
+                    placeholder="Slide Content (Bullets)..."
+                    className="w-full h-full text-xl font-medium text-slate-600 placeholder-slate-200 outline-none bg-transparent resize-none leading-relaxed"
                   />
-                  <div className="flex-1 bg-slate-100 rounded flex items-center justify-center text-slate-400">
-                    {selectedItem.url ? (
-                      <iframe 
-                        src={selectedItem.url.replace('watch?v=', 'embed/')} 
-                        className="w-full h-full" 
-                        title="Preview"
-                        frameBorder="0"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <span>Enter URL to preview</span>
-                    )}
+                )}
+                {(selectedItem.type === 'url' || selectedItem.type === 'video') && (
+                  <div className="flex flex-col gap-4 h-full">
+                    <input 
+                      type="text" 
+                      value={selectedItem.url || selectedItem.content} // Fallback to content if url is missing (for backward compatibility)
+                      onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'url', e.target.value)}
+                      placeholder="https://..."
+                      className="w-full text-lg text-blue-600 underline placeholder-slate-300 outline-none bg-slate-50 p-2 rounded"
+                    />
+                    <div className="flex-1 bg-slate-100 rounded flex items-center justify-center text-slate-400 overflow-hidden">
+                      {(selectedItem.url || selectedItem.content) ? (
+                        <iframe 
+                          src={(selectedItem.url || selectedItem.content).replace('watch?v=', 'embed/')} 
+                          className="w-full h-full" 
+                          title="Preview"
+                          frameBorder="0"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <span>Enter URL to preview</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              
+              {/* Note Section */}
+              <div className="border-t pt-4 mt-auto">
+                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Note (유의점)</label>
+                <textarea 
+                  value={selectedItem.note || ''}
+                  onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'note', e.target.value)}
+                  placeholder="작성 가능하나 빈칸일 수도 있음..."
+                  className="w-full h-20 text-sm text-slate-600 bg-slate-50 p-2 rounded outline-none resize-none border border-transparent focus:border-indigo-300"
+                />
+              </div>
             </div>
           </div>
         ) : (

@@ -113,6 +113,8 @@ const App = () => {
           // Split by □ and ◆
           const parts = materials.split(/([□◆])/).filter(p => p.trim() !== '');
           
+          let currentItem = null;
+
           for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
             if (part === '□') {
@@ -120,25 +122,35 @@ const App = () => {
                 const content = parts[i+1].trim();
                 let type = 'ppt';
                 if (content.toLowerCase().includes('video') || content.includes('영상')) type = 'video';
-                else if (content.toLowerCase().includes('url') || content.toLowerCase().includes('http') || content.includes('form')) type = 'url';
+                else if (content.toLowerCase().includes('url') || content.toLowerCase().includes('http') || content.includes('form') || content.includes('mentimeter')) type = 'url';
                 
-                items.push({
+                currentItem = {
                   id: Date.now() + index * 100 + items.length,
                   type: type,
                   title: content,
-                  content: '' 
-                });
+                  content: '',
+                  note: ''
+                };
+                items.push(currentItem);
                 i++;
               }
             } else if (part === '◆') {
               if (i + 1 < parts.length) {
                 const content = parts[i+1].trim();
-                items.push({
-                  id: Date.now() + index * 100 + items.length,
-                  type: 'ppt', 
-                  title: '유의점',
-                  content: content
-                });
+                if (currentItem) {
+                  currentItem.note = content;
+                } else {
+                  // If note appears before any item, create a dummy item or attach to a general note item?
+                  // For now, let's create a general PPT item
+                  currentItem = {
+                    id: Date.now() + index * 100 + items.length,
+                    type: 'ppt',
+                    title: 'General Note',
+                    content: '',
+                    note: content
+                  };
+                  items.push(currentItem);
+                }
                 i++;
               }
             }
