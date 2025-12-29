@@ -529,6 +529,7 @@ const App = () => {
           moveTrack={moveTrack}
           duplicateTrack={duplicateTrack}
           addItem={addItem}
+          updateItem={updateItem}
           deleteItem={deleteItem}
           moveItem={moveItem}
           exportExcel={exportExcel}

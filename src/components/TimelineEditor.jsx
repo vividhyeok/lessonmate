@@ -14,6 +14,7 @@ const TimelineEditor = ({
   moveTrack,
   duplicateTrack,
   addItem,
+  updateItem,
   deleteItem,
   moveItem,
   exportExcel,
@@ -77,6 +78,7 @@ const TimelineEditor = ({
                 duplicateTrack={duplicateTrack}
                 deleteTrack={deleteTrack}
                 addItem={addItem}
+                updateItem={updateItem}
                 moveItem={moveItem}
                 deleteItem={deleteItem}
               />

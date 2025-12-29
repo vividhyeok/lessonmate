@@ -67,17 +67,6 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId }) => {
                   </div>
                 )}
               </div>
-              
-              {/* Note Section */}
-              <div className="border-t pt-4 mt-auto">
-                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Note (유의점)</label>
-                <textarea 
-                  value={selectedItem.note || ''}
-                  onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'note', e.target.value)}
-                  placeholder="유의점을 입력하세요..."
-                  className="w-full h-20 text-sm text-slate-600 bg-slate-50 p-2 rounded outline-none resize-none border border-transparent focus:border-indigo-300"
-                />
-              </div>
             </div>
           </div>
         ) : (

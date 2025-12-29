@@ -24,6 +24,7 @@ const TrackColumn = ({
   duplicateTrack,
   deleteTrack,
   addItem,
+  updateItem,
   moveItem,
   deleteItem
 }) => {
@@ -113,6 +114,15 @@ const TrackColumn = ({
             <div className="text-[10px] text-slate-500 truncate">
               {item.type === 'ppt' ? item.content : item.url}
             </div>
+            
+            {/* Note Input */}
+            <textarea 
+              value={item.note || ''}
+              onChange={(e) => updateItem(track.id, item.id, 'note', e.target.value)}
+              placeholder="유의점..."
+              className="w-full h-12 bg-[#1e1e1e] text-slate-400 text-[10px] rounded p-1 outline-none border border-slate-700 focus:border-indigo-500 resize-none mt-1"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         ))}
         
