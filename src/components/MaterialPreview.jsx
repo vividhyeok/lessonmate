@@ -16,6 +16,19 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks }) 
     }
   }
 
+  // Parse Title and Body from Content
+  // Format: [Title] Body...
+  let slideTitle = "인공지능의 이해";
+  let slideBody = activeContent;
+
+  if (activeContent) {
+    const match = activeContent.match(/^\[(.*?)\]([\s\S]*)$/);
+    if (match) {
+      slideTitle = match[1];
+      slideBody = match[2].trim();
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col bg-slate-800 relative">
       <div className="h-8 bg-slate-900 border-b border-slate-700 flex items-center px-4 justify-between shrink-0">
@@ -28,13 +41,13 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks }) 
         <div className="aspect-video w-full max-w-3xl bg-white shadow-2xl flex flex-col transition-all duration-300">
             {/* Slide Header / Title */}
             <div className="p-6 pb-4 border-b-4 border-indigo-500 flex gap-4">
-               <h1 className="text-3xl font-black text-slate-900">인공지능의 이해</h1>
+               <h1 className="text-3xl font-black text-slate-900">{slideTitle}</h1>
             </div>
 
             {/* Slide Body */}
             <div className="flex-1 p-8 pt-6 overflow-auto">
                <div className="text-2xl font-medium text-slate-700 whitespace-pre-wrap leading-relaxed">
-                  {activeContent || <span className="text-slate-300 italic">내용 없음</span>}
+                  {slideBody || <span className="text-slate-300 italic">내용 없음</span>}
                </div>
             </div>
         </div>
