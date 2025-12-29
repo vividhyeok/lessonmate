@@ -74,7 +74,7 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId }) => {
                 <textarea 
                   value={selectedItem.note || ''}
                   onChange={(e) => updateItem(selectedTrackId, selectedItem.id, 'note', e.target.value)}
-                  placeholder="작성 가능하나 빈칸일 수도 있음..."
+                  placeholder="유의점을 입력하세요..."
                   className="w-full h-20 text-sm text-slate-600 bg-slate-50 p-2 rounded outline-none resize-none border border-transparent focus:border-indigo-300"
                 />
               </div>
