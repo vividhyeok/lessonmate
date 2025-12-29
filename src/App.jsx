@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { STAGES } from './constants/stages';
+import { DEFAULT_LESSON_CSV } from './constants/defaultLesson';
 import { loadScript } from './utils/loadScript';
 import { getFiles, saveFile, deleteFile, createFile } from './utils/storage';
 import LessonPlanView from './components/LessonPlanView';
@@ -40,13 +41,24 @@ const App = () => {
     const loadedFiles = getFiles();
     setFiles(loadedFiles);
     
-    if (loadedFiles.length > 0) {
-      loadLesson(loadedFiles[0]);
+    // Prototype: Always load default lesson if not present or just force it for now
+    // Check if "AI 수업 예시" exists, if not create it from default CSV
+    const defaultLessonName = "AI 수업 예시";
+    const existingDefault = loadedFiles.find(f => f.name === defaultLessonName);
+
+    if (existingDefault) {
+       loadLesson(existingDefault);
     } else {
-      // Create default if absolutely nothing exists (should be handled by getFiles but safe check)
-      const newFile = createFile('Untitled Lesson');
-      setFiles([newFile]);
-      loadLesson(newFile);
+       // Parse default CSV and create file
+       const rows = parseCSV(DEFAULT_LESSON_CSV);
+       if (rows.length > 0) {
+          const newTracks = processRows(rows);
+          const newFile = createFile(defaultLessonName);
+          newFile.tracks = newTracks;
+          saveFile(newFile);
+          setFiles(getFiles());
+          loadLesson(newFile);
+       }
     }
     
     setIsLoaded(true);
@@ -99,7 +111,25 @@ const App = () => {
         const rows = parseCSV(text);
         if (rows.length === 0) return;
 
-        const newTracks = rows.map((row, index) => {
+        const newTracks = processRows(rows);
+
+        const newFile = createFile(file.name.replace('.csv', ''));
+        newFile.tracks = newTracks;
+        saveFile(newFile);
+        setFiles(getFiles());
+        loadLesson(newFile);
+        alert('Imported successfully!');
+
+      } catch (err) {
+        console.error(err);
+        alert('Failed to parse CSV');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const processRows = (rows) => {
+      return rows.map((row, index) => {
           // row: [Stage, Activity, Teacher, Student, Time, PPT Title, PPT Note, URL Title, URL Note, Video Title, Video Note]
           
           // Map stage
@@ -154,20 +184,6 @@ const App = () => {
             items: items
           };
         });
-
-        const newFile = createFile(file.name.replace('.csv', ''));
-        newFile.tracks = newTracks;
-        saveFile(newFile);
-        setFiles(getFiles());
-        loadLesson(newFile);
-        alert('Imported successfully!');
-
-      } catch (err) {
-        console.error(err);
-        alert('Failed to parse CSV');
-      }
-    };
-    reader.readAsText(file);
   };
 
   const parseCSV = (text) => {

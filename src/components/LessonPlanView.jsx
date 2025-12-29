@@ -1,6 +1,27 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FileText } from 'lucide-react';
 import { STAGES } from '../constants/stages';
+
+const AutoResizeTextarea = ({ value, onChange, className }) => {
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={onChange}
+      className={`${className} overflow-hidden`}
+      rows={1}
+    />
+  );
+};
 
 const LessonPlanView = ({ 
   tracks, 
@@ -57,29 +78,26 @@ const LessonPlanView = ({
                     />
                   </td>
                   <td className="border border-black p-2 align-top">
-                    <textarea 
+                    <AutoResizeTextarea 
                       value={t.teacher}
                       onChange={(e) => updateTrack(t.id, 'teacher', e.target.value)}
-                      className="w-full h-full min-h-[60px] bg-transparent outline-none resize-none font-batang leading-relaxed"
+                      className="w-full bg-transparent outline-none resize-none font-batang leading-relaxed min-h-[60px]"
                     />
                   </td>
                   <td className="border border-black p-2 align-top">
-                    <textarea 
+                    <AutoResizeTextarea 
                       value={t.student}
                       onChange={(e) => updateTrack(t.id, 'student', e.target.value)}
-                      className="w-full h-full min-h-[60px] bg-transparent outline-none resize-none font-batang leading-relaxed"
+                      className="w-full bg-transparent outline-none resize-none font-batang leading-relaxed min-h-[60px]"
                     />
                   </td>
                   <td className="border border-black p-2 text-center align-middle text-xs text-slate-500">
                     <div className="flex flex-col gap-2 items-start text-left w-full">
-                      {t.items && t.items.length > 0 ? t.items.map((item, idx) => (
+                      {t.items && t.items.filter(item => item.type === 'ppt').length > 0 ? t.items.filter(item => item.type === 'ppt').map((item, idx) => (
                         <div key={idx} className="flex flex-col w-full">
                            <div className="flex items-start gap-1 w-full">
-                              <span className="shrink-0 font-bold">
-                                {item.type === 'ppt' ? '□' : item.type === 'video' ? '□' : '□'}
-                              </span>
+                              <span className="shrink-0 font-bold">□</span>
                               <span className="break-words whitespace-pre-wrap font-bold">
-                                {item.type === 'ppt' ? '(PPT) ' : item.type === 'video' ? '(Video) ' : '(URL) '}
                                 {item.title}
                               </span>
                            </div>
