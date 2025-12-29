@@ -130,7 +130,7 @@ const App = () => {
 
   const processRows = (rows) => {
       return rows.map((row, index) => {
-          // row: [Stage, Activity, Teacher, Student, Time, Material(Combined) OR PPT Title, PPT Note, ...]
+          // row: [Stage, Activity, Teacher, Student, PPT Content, Time, Materials]
           
           let stage = 'dev';
           if (row[0] && row[0].includes('도입')) stage = 'intro';
@@ -141,77 +141,70 @@ const App = () => {
           const teacherText = cleanText(row[2]);
           const studentText = cleanText(row[3]);
           const activity = cleanText(row[1]);
-
-          // Parse items
-          const items = [];
           
-          // Check for new format (Combined Material Column at index 5)
-          // If row length is small (<= 7) and row[5] exists, assume new format
-          if (row.length <= 7 && row[5]) {
-              // New format parsing
-              const materialText = row[5].replace(/<br>/gi, '\n');
-              // Split by □
-              const parts = materialText.split('□');
-              // parts[0] is usually empty or garbage before first box
+          // Determine format based on column count or content
+          // New format (7 cols): Time is at index 5
+          // Old format (6 cols): Time is at index 4
+          
+          let time = 0;
+          let pptContent = '';
+          let materialsText = '';
+
+          // Simple heuristic: Check if col 5 is a number (Time) -> New Format
+          // Or check if col 4 is a number (Time) -> Old Format
+          const isCol5Time = !isNaN(parseInt(row[5]));
+          const isCol4Time = !isNaN(parseInt(row[4]));
+
+          if (isCol5Time) {
+              // New 7-column format
+              pptContent = cleanText(row[4]);
+              time = parseInt(row[5]) || 0;
+              materialsText = row[6] || '';
+          } else if (isCol4Time) {
+              // Old 6-column format
+              time = parseInt(row[4]) || 0;
+              materialsText = row[5] || '';
+          } else {
+              // Fallback, maybe header or malformed
+              // Try to guess
+              if (row.length >= 7) {
+                  pptContent = cleanText(row[4]);
+                  time = parseInt(row[5]) || 0;
+                  materialsText = row[6] || '';
+              } else {
+                  time = parseInt(row[4]) || 0;
+                  materialsText = row[5] || '';
+              }
+          }
+
+          // Parse items from materialsText
+          const items = [];
+          if (materialsText) {
+              const cleanMaterials = materialsText.replace(/<br>/gi, '\n');
+              const parts = cleanMaterials.split('□');
               for (let i = 1; i < parts.length; i++) {
                   const part = parts[i];
-                  // Split by ◆ for notes
                   const subParts = part.split('◆');
                   const title = subParts[0].trim();
                   const note = subParts.slice(1).join('\n').trim();
                   
                   items.push({
                       id: Date.now() + index * 100 + i,
-                      type: 'ppt', // Default to ppt so it shows up in the view
+                      type: 'ppt',
                       title: title,
                       content: '',
                       note: note
                   });
-              }
-          } else {
-              // Old format parsing (fallback)
-              // 1. PPT (Col 5, 6)
-              if (row[5] && row[5].trim()) {
-                 items.push({
-                    id: Date.now() + index * 100 + 1,
-                    type: 'ppt',
-                    title: row[5],
-                    content: '',
-                    note: row[6] || ''
-                 });
-              }
-
-              // 2. URL (Col 7, 8)
-              if (row[7] && row[7].trim()) {
-                 items.push({
-                    id: Date.now() + index * 100 + 2,
-                    type: 'url',
-                    title: row[7],
-                    url: row[7], // Use title as initial URL
-                    content: '',
-                    note: row[8] || ''
-                 });
-              }
-              
-              // 3. Video (Col 9, 10)
-              if (row[9] && row[9].trim()) {
-                 items.push({
-                    id: Date.now() + index * 100 + 3,
-                    type: 'video',
-                    title: row[9],
-                    url: row[9], // Use title as initial URL/Search term
-                    content: '',
-                    note: row[10] || ''
-                 });
               }
           }
 
           return {
             id: Date.now() + index,
             stage: stage,
-            time: parseInt(row[4]) || 0,
+            time: time,
             teacher: `[${activity}]\n${teacherText}`,
             student: studentText,
+            pptContent: pptContent,
             items: items
           };
         });
@@ -335,6 +328,7 @@ const App = () => {
       time: 5,
       teacher: '',
       student: '',
+      pptContent: '',
       items: []
     };
     setTracks([...tracks, newTrack]);

@@ -50,6 +50,7 @@ const LessonPlanView = ({
                 <th className="border border-black p-2 w-16 text-center bg-slate-100">시간</th>
                 <th className="border border-black p-2 text-center bg-slate-100">교수 활동</th>
                 <th className="border border-black p-2 text-center bg-slate-100">학습 활동</th>
+                <th className="border border-black p-2 text-center bg-slate-100">PPT 내용</th>
                 <th className="border border-black p-2 w-24 text-center bg-slate-100">자료</th>
               </tr>
             </thead>
@@ -88,6 +89,13 @@ const LessonPlanView = ({
                     <AutoResizeTextarea 
                       value={t.student}
                       onChange={(e) => updateTrack(t.id, 'student', e.target.value)}
+                      className="w-full bg-transparent outline-none resize-none font-batang leading-relaxed min-h-[60px]"
+                    />
+                  </td>
+                  <td className="border border-black p-2 align-top">
+                    <AutoResizeTextarea 
+                      value={t.pptContent || ''}
+                      onChange={(e) => updateTrack(t.id, 'pptContent', e.target.value)}
                       className="w-full bg-transparent outline-none resize-none font-batang leading-relaxed min-h-[60px]"
                     />
                   </td>

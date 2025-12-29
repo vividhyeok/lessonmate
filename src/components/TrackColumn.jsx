@@ -86,6 +86,16 @@ const TrackColumn = ({
         />
       </div>
 
+      {/* PPT Content Row */}
+      <div className="h-32 border-b border-slate-700 p-1 shrink-0">
+        <textarea 
+          value={track.pptContent || ''}
+          onChange={(e) => updateTrack(track.id, 'pptContent', e.target.value)}
+          placeholder="PPT Slide Content..."
+          className="w-full h-full bg-[#252526] text-slate-300 text-xs rounded p-2 outline-none border border-slate-600 focus:border-indigo-500 resize-none leading-relaxed"
+        />
+      </div>
+
       {/* Materials Row (Dynamic List) */}
       <div className="flex-1 border-b border-slate-700 p-2 flex flex-col gap-2 min-h-[200px] bg-[#1a1a1a]">
         {track.items.map((item, i) => (
