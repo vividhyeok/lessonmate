@@ -39,14 +39,18 @@ const App = () => {
 
     // Load Files from LocalStorage
     const loadedFiles = getFiles();
-    setFiles(loadedFiles);
     
     // Prototype: Always load default lesson if not present or just force it for now
-    // Check if "AI 수업 예시" exists, if not create it from default CSV
-    const defaultLessonName = "AI 수업 예시";
-    const existingDefault = loadedFiles.find(f => f.name === defaultLessonName);
+    // Check if "인공지능의 이해" exists, if not create it from default CSV
+    const defaultLessonName = "인공지능의 이해";
+    
+    // Filter out the old "AI 수업 예시" if it exists to avoid duplicates/confusion
+    const cleanedFiles = loadedFiles.filter(f => f.name !== "AI 수업 예시");
+    
+    const existingDefault = cleanedFiles.find(f => f.name === defaultLessonName);
 
     if (existingDefault) {
+       setFiles(cleanedFiles);
        loadLesson(existingDefault);
     } else {
        // Parse default CSV and create file
@@ -56,8 +60,13 @@ const App = () => {
           const newFile = createFile(defaultLessonName);
           newFile.tracks = newTracks;
           saveFile(newFile);
-          setFiles(getFiles());
+          
+          // Update files list
+          const newFiles = [...cleanedFiles, newFile];
+          setFiles(newFiles);
           loadLesson(newFile);
+       } else {
+          setFiles(cleanedFiles);
        }
     }
     
@@ -548,6 +557,7 @@ const App = () => {
             selectedItem={selectedItem}
             updateItem={updateItem}
             selectedTrackId={selectedTrackId}
+            tracks={tracks}
           />
         </div>
 
