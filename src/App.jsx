@@ -15,7 +15,6 @@ const App = () => {
   const [tracks, setTracks] = useState([]);
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Layout State
@@ -26,55 +25,8 @@ const App = () => {
   const isResizingHorizontal = useRef(false);
 
   // --- Effects ---
-  useEffect(() => {
-    const loadLibs = async () => {
-      try {
-        await loadScript('https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js');
-        await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
-      } catch (e) {
-        console.error("Failed to load libraries", e);
-      }
-    };
-    loadLibs();
-
-    // Load Files from LocalStorage
-    const loadedFiles = getFiles();
-    
-    // Prototype: Always load default lesson if not present or just force it for now
-    // Check if "인공지능의 이해" exists, if not create it from default CSV
-    const defaultLessonName = "인공지능의 이해";
-    
-    // Filter out the old "AI 수업 예시" if it exists to avoid duplicates/confusion
-    const cleanedFiles = loadedFiles.filter(f => f.name !== "AI 수업 예시");
-    
-    const existingDefault = cleanedFiles.find(f => f.name === defaultLessonName);
-
-    if (existingDefault) {
-       setFiles(cleanedFiles);
-       loadLesson(existingDefault);
-    } else {
-       // Parse default CSV and create file
-       const rows = parseCSV(DEFAULT_LESSON_CSV);
-       if (rows.length > 0) {
-          const newTracks = processRows(rows);
-          const newFile = createFile(defaultLessonName);
-          newFile.tracks = newTracks;
-          saveFile(newFile);
-          
-          // Update files list
-          const newFiles = [...cleanedFiles, newFile];
-          setFiles(newFiles);
-          loadLesson(newFile);
-       } else {
-          setFiles(cleanedFiles);
-       }
-    }
-    
-    setIsLoaded(true);
-  }, []);
-
   // --- File Actions ---
-  const loadLesson = (file) => {
+  function loadLesson(file) {
     setCurrentFile(file);
     setTracks(file.tracks || []);
     if (file.tracks && file.tracks.length > 0) {
@@ -86,7 +38,7 @@ const App = () => {
       setSelectedTrackId(null);
       setSelectedItemId(null);
     }
-  };
+  }
 
   const handleCreateFile = () => {
     const name = prompt("Enter lesson name:", "New Lesson");
@@ -109,6 +61,33 @@ const App = () => {
           setTracks([]);
         }
       }
+    }
+  };
+
+  const normalizeCsvUrl = (rawUrl) => {
+    if (!rawUrl) return '';
+
+    try {
+      const url = new URL(rawUrl.trim());
+
+      if (url.hostname.includes('docs.google.com') && url.pathname.includes('/spreadsheets/')) {
+        const match = url.pathname.match(/\/d\/([^/]+)/);
+        const gid = url.searchParams.get('gid') || '0';
+        if (match?.[1]) {
+          return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv&gid=${gid}`;
+        }
+      }
+
+      if (url.hostname.includes('drive.google.com')) {
+        const fileMatch = url.pathname.match(/\/file\/d\/([^/]+)/);
+        if (fileMatch?.[1]) {
+          return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+        }
+      }
+
+      return url.toString();
+    } catch {
+      return rawUrl.trim();
     }
   };
 
@@ -137,7 +116,38 @@ const App = () => {
     reader.readAsText(file);
   };
 
-  const processRows = (rows) => {
+  const handleImportFromUrl = async () => {
+    const rawUrl = prompt('CSV URL 또는 Google Drive/Sheets 공개 링크를 입력하세요.');
+    if (!rawUrl) return;
+
+    const url = normalizeCsvUrl(rawUrl);
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const text = await response.text();
+      const rows = parseCSV(text);
+      if (rows.length === 0) {
+        alert('CSV 데이터가 비어 있습니다.');
+        return;
+      }
+
+      const lessonName = prompt('가져온 수업 이름', 'Google Drive Import') || 'Google Drive Import';
+      const newTracks = processRows(rows);
+      const newFile = createFile(lessonName);
+      newFile.tracks = newTracks;
+      saveFile(newFile);
+      setFiles(getFiles());
+      loadLesson(newFile);
+      alert('URL에서 가져오기 완료!');
+    } catch (error) {
+      console.error(error);
+      alert('URL 가져오기에 실패했습니다. 공개 링크/CSV 링크인지 확인해주세요.');
+    }
+  };
+
+  function processRows(rows) {
       return rows.map((row, index) => {
           // row: [Stage, Activity, Teacher, Student, PPT Content, Time, Materials]
           
@@ -214,12 +224,13 @@ const App = () => {
             teacher: `[${activity}]\n${teacherText}`,
             student: studentText,
             pptContent: pptContent,
+            pptFontSize: 28,
             items: items
           };
         });
-  };
+  }
 
-  const parseCSV = (text) => {
+  function parseCSV(text) {
     const result = [];
     let row = [];
     let inQuotes = false;
@@ -264,7 +275,54 @@ const App = () => {
       }
     }
     return result;
-  };
+  }
+
+  // --- Effects ---
+  useEffect(() => {
+    const loadLibs = async () => {
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+      } catch (e) {
+        console.error("Failed to load libraries", e);
+      }
+    };
+    loadLibs();
+
+    // Load Files from LocalStorage
+    const loadedFiles = getFiles();
+    
+    // Prototype: Always load default lesson if not present or just force it for now
+    // Check if "인공지능의 이해" exists, if not create it from default CSV
+    const defaultLessonName = "인공지능의 이해";
+    
+    // Filter out the old "AI 수업 예시" if it exists to avoid duplicates/confusion
+    const cleanedFiles = loadedFiles.filter(f => f.name !== "AI 수업 예시");
+    
+    const existingDefault = cleanedFiles.find(f => f.name === defaultLessonName);
+
+    if (existingDefault) {
+       setFiles(cleanedFiles);
+       loadLesson(existingDefault);
+    } else {
+       // Parse default CSV and create file
+       const rows = parseCSV(DEFAULT_LESSON_CSV);
+       if (rows.length > 0) {
+          const newTracks = processRows(rows);
+          const newFile = createFile(defaultLessonName);
+          newFile.tracks = newTracks;
+          saveFile(newFile);
+          
+          // Update files list
+          const newFiles = [...cleanedFiles, newFile];
+          setFiles(newFiles);
+          loadLesson(newFile);
+       } else {
+          setFiles(cleanedFiles);
+       }
+    }
+    
+  }, []);
 
   const handleSaveCurrent = () => {
     if (!currentFile) return;
@@ -276,14 +334,9 @@ const App = () => {
 
   // Auto-save effect (optional, but user asked for "save button", so maybe manual is better. 
   // But keeping state in sync with currentFile object in memory is good practice)
-  useEffect(() => {
-    if (currentFile) {
-      setCurrentFile(prev => ({ ...prev, tracks }));
-    }
-  }, [tracks]);
 
   // --- Resize Logic ---
-  const startResizeVertical = (e) => {
+  const startResizeVertical = () => {
     isResizingVertical.current = true;
     document.addEventListener('mousemove', handleResizeVertical);
     document.addEventListener('mouseup', stopResizeVertical);
@@ -302,7 +355,7 @@ const App = () => {
     document.removeEventListener('mouseup', stopResizeVertical);
   };
 
-  const startResizeHorizontal = (e) => {
+  const startResizeHorizontal = () => {
     isResizingHorizontal.current = true;
     document.addEventListener('mousemove', handleResizeHorizontal);
     document.addEventListener('mouseup', stopResizeHorizontal);
@@ -338,6 +391,7 @@ const App = () => {
       teacher: '',
       student: '',
       pptContent: '',
+      pptFontSize: 28,
       items: []
     };
     setTracks([...tracks, newTrack]);
@@ -459,17 +513,48 @@ const App = () => {
   const exportPPT = () => {
     if (!window.PptxGenJS) return;
     const pptx = new window.PptxGenJS();
-    pptx.addSlide().addText("교수학습 과정안", { x: 1, y: 2.5, w: 8, fontSize: 36, align: 'center', bold: true });
+    pptx.layout = 'LAYOUT_WIDE';
 
-    tracks.forEach(t => {
-      t.items.filter(i => i.type === 'ppt').forEach(item => {
-        const s = pptx.addSlide();
-        s.addText(item.title || "제목 없음", { x: 0.5, y: 0.5, w: 9, fontSize: 24, bold: true, color: '363636' });
-        s.addText(item.content || "", { x: 0.5, y: 1.5, w: 9, fontSize: 18, color: '666666', bullet: true });
-        s.addNotes(`[${STAGES.find(st => st.id === t.stage)?.label}] ${t.teacher}`);
+    pptx.addSlide().addText('교수학습 과정안', { x: 1, y: 2.5, w: 11, fontSize: 34, align: 'center', bold: true });
+
+    tracks.forEach((track) => {
+      const stageLabel = STAGES.find((st) => st.id === track.stage)?.label || track.stage;
+      const baseFont = parseInt(track.pptFontSize, 10) || 28;
+      const content = track.pptContent || '';
+      const titleMatch = content.match(/^\[(.*?)\]([\s\S]*)$/);
+      const title = titleMatch?.[1] || `${stageLabel} 단계`;
+      const body = titleMatch?.[2]?.trim() || content;
+
+      const slide = pptx.addSlide();
+      slide.addText(title, { x: 0.5, y: 0.4, w: 12, h: 0.7, fontSize: 28, bold: true, color: '1F2937' });
+      slide.addText(body || ' ', { x: 0.7, y: 1.3, w: 10.8, h: 3.8, fontSize: Math.max(14, Math.min(54, baseFont)), color: '334155' });
+
+      let y = 5.3;
+      track.items.forEach((item) => {
+        const typeLabel = (item.type || 'ppt').toUpperCase();
+        const line = `[${typeLabel}] ${item.title || 'Untitled'}`;
+
+        if (item.url) {
+          slide.addText(line, { x: 0.7, y, w: 10.8, h: 0.35, fontSize: 14, color: '2563EB', hyperlink: { url: item.url } });
+          y += 0.4;
+          slide.addText(item.url, { x: 1.0, y, w: 10.5, h: 0.3, fontSize: 10, color: '3B82F6', hyperlink: { url: item.url } });
+        } else {
+          slide.addText(line, { x: 0.7, y, w: 10.8, h: 0.35, fontSize: 14, color: '475569' });
+        }
+
+        y += 0.45;
+        if (item.note) {
+          slide.addText(`- ${item.note}`, { x: 1.0, y, w: 10.3, h: 0.5, fontSize: 11, color: '6B7280' });
+          y += 0.55;
+        }
+
+        if (y > 6.7) y = 6.7;
       });
+
+      slide.addNotes(`[${stageLabel}] ${track.teacher || ''}`);
     });
-    pptx.writeFile({ fileName: "수업자료.pptx" });
+
+    pptx.writeFile({ fileName: '수업자료.pptx' });
   };
 
   const exportPDF = () => {
@@ -525,6 +610,7 @@ const App = () => {
           onDeleteFile={handleDeleteFile}
           onSaveCurrent={handleSaveCurrent}
           onImportFile={handleImportFile}
+          onImportFromUrl={handleImportFromUrl}
           onToggleSidebar={() => setIsSidebarOpen(false)}
         />
       )}
@@ -558,6 +644,7 @@ const App = () => {
             updateItem={updateItem}
             selectedTrackId={selectedTrackId}
             tracks={tracks}
+            updateTrack={updateTrack}
           />
         </div>
 
@@ -585,6 +672,7 @@ const App = () => {
           moveItem={moveItem}
           exportExcel={exportExcel}
           exportPPT={exportPPT}
+          exportPDF={exportPDF}
         />
       </div>
     </div>
