@@ -55,7 +55,7 @@ const LessonPlanView = ({
               </tr>
             </thead>
             <tbody>
-              {tracks.map((t, i) => (
+              {tracks.map((t) => (
                 <tr 
                   key={t.id} 
                   className={`cursor-pointer hover:bg-blue-50 ${selectedId === t.id ? 'bg-blue-100' : ''}`}

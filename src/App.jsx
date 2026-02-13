@@ -15,7 +15,6 @@ const App = () => {
   const [tracks, setTracks] = useState([]);
   const [selectedTrackId, setSelectedTrackId] = useState(null);
   const [selectedItemId, setSelectedItemId] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Layout State
@@ -26,55 +25,8 @@ const App = () => {
   const isResizingHorizontal = useRef(false);
 
   // --- Effects ---
-  useEffect(() => {
-    const loadLibs = async () => {
-      try {
-        await loadScript('https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js');
-        await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
-      } catch (e) {
-        console.error("Failed to load libraries", e);
-      }
-    };
-    loadLibs();
-
-    // Load Files from LocalStorage
-    const loadedFiles = getFiles();
-    
-    // Prototype: Always load default lesson if not present or just force it for now
-    // Check if "인공지능의 이해" exists, if not create it from default CSV
-    const defaultLessonName = "인공지능의 이해";
-    
-    // Filter out the old "AI 수업 예시" if it exists to avoid duplicates/confusion
-    const cleanedFiles = loadedFiles.filter(f => f.name !== "AI 수업 예시");
-    
-    const existingDefault = cleanedFiles.find(f => f.name === defaultLessonName);
-
-    if (existingDefault) {
-       setFiles(cleanedFiles);
-       loadLesson(existingDefault);
-    } else {
-       // Parse default CSV and create file
-       const rows = parseCSV(DEFAULT_LESSON_CSV);
-       if (rows.length > 0) {
-          const newTracks = processRows(rows);
-          const newFile = createFile(defaultLessonName);
-          newFile.tracks = newTracks;
-          saveFile(newFile);
-          
-          // Update files list
-          const newFiles = [...cleanedFiles, newFile];
-          setFiles(newFiles);
-          loadLesson(newFile);
-       } else {
-          setFiles(cleanedFiles);
-       }
-    }
-    
-    setIsLoaded(true);
-  }, []);
-
   // --- File Actions ---
-  const loadLesson = (file) => {
+  function loadLesson(file) {
     setCurrentFile(file);
     setTracks(file.tracks || []);
     if (file.tracks && file.tracks.length > 0) {
@@ -86,7 +38,7 @@ const App = () => {
       setSelectedTrackId(null);
       setSelectedItemId(null);
     }
-  };
+  }
 
   const handleCreateFile = () => {
     const name = prompt("Enter lesson name:", "New Lesson");
@@ -137,7 +89,7 @@ const App = () => {
     reader.readAsText(file);
   };
 
-  const processRows = (rows) => {
+  function processRows(rows) {
       return rows.map((row, index) => {
           // row: [Stage, Activity, Teacher, Student, PPT Content, Time, Materials]
           
@@ -217,9 +169,9 @@ const App = () => {
             items: items
           };
         });
-  };
+  }
 
-  const parseCSV = (text) => {
+  function parseCSV(text) {
     const result = [];
     let row = [];
     let inQuotes = false;
@@ -264,7 +216,56 @@ const App = () => {
       }
     }
     return result;
-  };
+  }
+
+  // --- Effects ---
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const loadLibs = async () => {
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+      } catch (e) {
+        console.error("Failed to load libraries", e);
+      }
+    };
+    loadLibs();
+
+    // Load Files from LocalStorage
+    const loadedFiles = getFiles();
+    
+    // Prototype: Always load default lesson if not present or just force it for now
+    // Check if "인공지능의 이해" exists, if not create it from default CSV
+    const defaultLessonName = "인공지능의 이해";
+    
+    // Filter out the old "AI 수업 예시" if it exists to avoid duplicates/confusion
+    const cleanedFiles = loadedFiles.filter(f => f.name !== "AI 수업 예시");
+    
+    const existingDefault = cleanedFiles.find(f => f.name === defaultLessonName);
+
+    if (existingDefault) {
+       setFiles(cleanedFiles);
+       loadLesson(existingDefault);
+    } else {
+       // Parse default CSV and create file
+       const rows = parseCSV(DEFAULT_LESSON_CSV);
+       if (rows.length > 0) {
+          const newTracks = processRows(rows);
+          const newFile = createFile(defaultLessonName);
+          newFile.tracks = newTracks;
+          saveFile(newFile);
+          
+          // Update files list
+          const newFiles = [...cleanedFiles, newFile];
+          setFiles(newFiles);
+          loadLesson(newFile);
+       } else {
+          setFiles(cleanedFiles);
+       }
+    }
+    
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSaveCurrent = () => {
     if (!currentFile) return;
@@ -276,14 +277,9 @@ const App = () => {
 
   // Auto-save effect (optional, but user asked for "save button", so maybe manual is better. 
   // But keeping state in sync with currentFile object in memory is good practice)
-  useEffect(() => {
-    if (currentFile) {
-      setCurrentFile(prev => ({ ...prev, tracks }));
-    }
-  }, [tracks]);
 
   // --- Resize Logic ---
-  const startResizeVertical = (e) => {
+  const startResizeVertical = () => {
     isResizingVertical.current = true;
     document.addEventListener('mousemove', handleResizeVertical);
     document.addEventListener('mouseup', stopResizeVertical);
@@ -302,7 +298,7 @@ const App = () => {
     document.removeEventListener('mouseup', stopResizeVertical);
   };
 
-  const startResizeHorizontal = (e) => {
+  const startResizeHorizontal = () => {
     isResizingHorizontal.current = true;
     document.addEventListener('mousemove', handleResizeHorizontal);
     document.addEventListener('mouseup', stopResizeHorizontal);
@@ -585,6 +581,7 @@ const App = () => {
           moveItem={moveItem}
           exportExcel={exportExcel}
           exportPPT={exportPPT}
+          exportPDF={exportPDF}
         />
       </div>
     </div>
