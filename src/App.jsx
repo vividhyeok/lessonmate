@@ -645,6 +645,7 @@ const App = () => {
             selectedTrackId={selectedTrackId}
             tracks={tracks}
             updateTrack={updateTrack}
+            lessonName={currentFile?.name}
           />
         </div>
 

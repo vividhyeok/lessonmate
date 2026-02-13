@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { ExternalLink, Link as LinkIcon, Presentation, Video, Type } from 'lucide-react';
+import { ExternalLink, Link as LinkIcon, Presentation, Video, Type, RotateCcw } from 'lucide-react';
 
-const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, updateTrack }) => {
+const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, updateTrack, lessonName }) => {
   const currentTrack = useMemo(() => tracks?.find((t) => t.id === selectedTrackId), [tracks, selectedTrackId]);
 
   const activeContent = useMemo(() => {
@@ -47,9 +47,16 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, up
         <span className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2 tracking-wider">
           <Presentation size={14} className="text-orange-400" /> Material Preview
         </span>
-        <span className="text-[10px] font-mono text-slate-500 bg-[#1e1e1e] px-2 py-1 rounded border border-slate-700">
-          {selectedItem ? selectedItem.type.toUpperCase() : 'PPT'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-slate-500 bg-[#1e1e1e] px-2 py-1 rounded border border-slate-700">
+            {selectedItem ? selectedItem.type.toUpperCase() : 'PPT'}
+          </span>
+          {currentTrack && (
+            <span className="text-[10px] text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 px-2 py-1 rounded">
+              FONT {pptFontSize}px
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col bg-[#1e1e1e] overflow-hidden">
@@ -77,7 +84,7 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, up
             </div>
 
             <div className="h-8 bg-slate-50 border-t border-slate-100 flex items-center justify-between px-6 text-xs text-slate-400 font-medium shrink-0">
-              <span>LessonMate AI Class</span>
+              <span>{lessonName || 'LessonMate AI Class'}</span>
               <span>
                 {(tracks ? tracks.findIndex((t) => t.id === selectedTrackId) : -1) + 1} / {tracks ? tracks.length : '-'}
               </span>
@@ -111,9 +118,20 @@ const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, up
                   min="14"
                   max="54"
                   value={pptFontSize}
-                  onChange={(e) => updateTrack(currentTrack.id, 'pptFontSize', parseInt(e.target.value || '28', 10))}
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    if (Number.isNaN(next)) return;
+                    updateTrack(currentTrack.id, 'pptFontSize', Math.max(14, Math.min(54, next)));
+                  }}
                   className="w-16 bg-[#1e1e1e] border border-slate-600 rounded px-1.5 py-1 text-xs"
                 />
+                <button
+                  onClick={() => updateTrack(currentTrack.id, 'pptFontSize', 28)}
+                  className="inline-flex items-center gap-1 text-[11px] text-slate-300 bg-[#1e1e1e] border border-slate-600 rounded px-2 py-1 hover:border-indigo-500"
+                  title="기본값으로 되돌리기"
+                >
+                  <RotateCcw size={11} /> Reset
+                </button>
               </div>
             </>
           )}
