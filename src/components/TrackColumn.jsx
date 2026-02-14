@@ -30,7 +30,7 @@ const TrackColumn = ({
 }) => {
   return (
     <div 
-      className={`w-80 border-r border-slate-700 flex flex-col shrink-0 transition-all duration-200 h-full ${
+      className={`w-72 md:w-80 border-r border-slate-700 flex flex-col shrink-0 transition-all duration-200 h-full ${
         selectedTrackId === track.id ? 'bg-[#2a2a2d] shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]' : 'bg-[#1e1e1e]'
       }`}
       onClick={() => setSelectedTrackId(track.id)}
