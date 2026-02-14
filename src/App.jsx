@@ -332,6 +332,16 @@ const App = () => {
     // alert("Saved!"); // Optional feedback
   };
 
+  useEffect(() => {
+    if (!currentFile?.id) return;
+
+    const timer = setTimeout(() => {
+      saveFile({ ...currentFile, tracks });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [tracks, currentFile]);
+
   // Auto-save effect (optional, but user asked for "save button", so maybe manual is better. 
   // But keeping state in sync with currentFile object in memory is good practice)
 
@@ -373,7 +383,7 @@ const App = () => {
     const adjustedX = relativeX - sidebarWidth;
     
     const newWidth = (adjustedX / availableWidth) * 100;
-    if (newWidth > 10 && newWidth < 90) setLeftWidth(newWidth);
+    if (newWidth > 35 && newWidth < 75) setLeftWidth(newWidth);
   };
 
   const stopResizeHorizontal = () => {
@@ -632,7 +642,6 @@ const App = () => {
             tracks={tracks}
             selectedId={selectedTrackId}
             setSelectedId={setSelectedTrackId}
-            updateTrack={updateTrack}
             totalTime={totalTime}
             width={leftWidth}
             startResizeHorizontal={startResizeHorizontal}
