@@ -344,9 +344,6 @@ const App = () => {
     return () => clearTimeout(timer);
   }, [tracks, currentFile]);
 
-  // Auto-save effect (optional, but user asked for "save button", so maybe manual is better. 
-  // But keeping state in sync with currentFile object in memory is good practice)
-
   // --- Resize Logic ---
   const startResizeVertical = () => {
     isResizingVertical.current = true;
