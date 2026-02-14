@@ -24,15 +24,17 @@ const App = () => {
   const isResizingVertical = useRef(false);
   const isResizingHorizontal = useRef(false);
 
-  // --- Effects ---
   // --- File Actions ---
   function loadLesson(file) {
     setCurrentFile(file);
     setTracks(file.tracks || []);
     if (file.tracks && file.tracks.length > 0) {
       setSelectedTrackId(file.tracks[0].id);
-      if (file.tracks[0].items.length > 0) {
-        setSelectedItemId(file.tracks[0].items[0].id);
+      const firstItems = file.tracks[0].items || [];
+      if (firstItems.length > 0) {
+        setSelectedItemId(firstItems[0].id);
+      } else {
+        setSelectedItemId(null);
       }
     } else {
       setSelectedTrackId(null);

@@ -14,7 +14,7 @@ import {
 const SLIDE_W = 1280;
 const SLIDE_H = 720;
 
-const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, updateTrack, lessonName }) => {
+const MaterialPreview = ({ selectedItem, updateItem, selectedTrackId, tracks, updateTrack = () => {}, lessonName }) => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
   const [tool, setTool] = useState('content');
   const viewportRef = useRef(null);

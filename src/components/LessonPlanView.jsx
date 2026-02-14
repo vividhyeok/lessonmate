@@ -16,6 +16,8 @@ const LessonPlanView = ({
   const viewportRef = useRef(null);
   const [scale, setScale] = useState(1);
 
+  const getStageLabel = (stageId) => STAGES.find((s) => s.id === stageId)?.label || stageId;
+
   useEffect(() => {
     if (!viewportRef.current) return;
 
@@ -71,7 +73,7 @@ const LessonPlanView = ({
                       className={`cursor-pointer hover:bg-blue-50 ${selectedId === t.id ? 'bg-blue-100' : ''}`}
                       onClick={() => setSelectedId(t.id)}
                     >
-                      <td className="border border-black p-2 text-center align-top">{STAGES.find((s) => s.id === t.stage)?.label || t.stage}</td>
+                      <td className="border border-black p-2 text-center align-top">{getStageLabel(t.stage)}</td>
                       <td className="border border-black p-2 text-center align-top">{t.time}</td>
                       <td className="border border-black p-2 align-top whitespace-pre-wrap">{t.teacher}</td>
                       <td className="border border-black p-2 align-top whitespace-pre-wrap">{t.student}</td>
